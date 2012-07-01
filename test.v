@@ -47,6 +47,7 @@ module test;
 
 		// Add stimulus here
 
+		#10 $finish;
 		for (count = 0; count < 200; count = count + 1) begin
 			#1;
 			CLK=1;
