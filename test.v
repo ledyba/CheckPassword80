@@ -26,35 +26,37 @@ module test;
 
 	// Inputs
 	reg CLK;
+	reg RESET;
 
 	// Outputs
-	wire FOUND;
-	wire [0:39] PASSWD_OUT;
+	wire TXD;
 
 
 	integer count;
 	
 	// Instantiate the Unit Under Test (UUT)
 	System uut (
+		.RESET(RESET), 
 		.CLK(CLK), 
-		.FOUND(FOUND), 
-		.PASSWD_OUT(PASSWD_OUT)
+		.TXD(TXD)
 	);
 
 	initial begin
 		// Initialize Inputs
 		CLK = 0;
-
+		RESET=1;
+		#1;
+		CLK = 1;
+		#1;
+		RESET=0;
+		CLK = 0;
 		// Add stimulus here
-
-		#10 $finish;
-		for (count = 0; count < 200; count = count + 1) begin
+		for (count = 0; count < 200000; count = count + 1) begin
 			#1;
 			CLK=1;
 			#1;
 			CLK=0;
 		end
-		#10 $finish;
 	end
       
 endmodule
