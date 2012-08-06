@@ -81,3 +81,10 @@ sch2HdlBatchFile
 *.txt
 *.xml
 *.err
+
+__pycache__
+*.pyc
+
+*.cfi
+*.mcs
+*.prm

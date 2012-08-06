@@ -24,9 +24,10 @@ module Counter(RESET, CLK, OUT);
 	
 	always @ (posedge CLK) begin
 		if (RESET)
-			cnt = 0;
+//			cnt <= 80'd81775738024957513438542;
+			cnt <= 80'd0;
 		else
-			cnt = added;
+			cnt <= added;
 	end
 endmodule
 
@@ -55,23 +56,24 @@ endmodule
 module Decoder(RESET, CLK, FOUND, PASSWD_OUT);
 	parameter integer ENQLEN=10;
 	parameter integer PASSLEN=5;
-	parameter [8*ENQLEN-1:0] ENCRYPTED = 0;
+	parameter [0:8*ENQLEN-1] ENCRYPTED = 0;
 	input RESET;
 	input CLK;
     output FOUND;
-    output [8*PASSLEN-1:0] PASSWD_OUT;
+    output [0:8*PASSLEN-1] PASSWD_OUT;
 	
-	wire [8*PASSLEN-1:0] passwd;
+	wire [0:8*PASSLEN-1] passwd;
 	Counter #(PASSLEN) counter(RESET, CLK, passwd);
 	
-	wire [8*PASSLEN-1:0] decoded;
+	wire [0:8*PASSLEN-1] decoded;
 
 	generate
 		/* 最後のN文字だけ復号し比較する */
 		genvar i;
 		for(i=0;i<PASSLEN;i=i+1) begin: len
-			CharDec #(.j(PASSLEN-1-((ENQLEN-PASSLEN + i)%PASSLEN)))
-				dev(passwd[(PASSLEN-1-i)*8+7:(PASSLEN-1-i)*8], ENCRYPTED[(ENQLEN-1-i)*8+7:(ENQLEN-1-i)*8], decoded[(PASSLEN-1-i)*8+7:(PASSLEN-1-i)*8]);
+			parameter j = PASSLEN-1-((ENQLEN-PASSLEN + i)%PASSLEN);
+			CharDec #(.j(j))
+				dev(passwd[j*8:j*8+7], ENCRYPTED[(ENQLEN-PASSLEN+i)*8:(ENQLEN-PASSLEN+i)*8+7], decoded[i*8:i*8+7]);
 		end
 	endgenerate
 	
@@ -81,20 +83,20 @@ endmodule
 
 module Serial(RESET, CLK, START, END, SIGNAL, BUFFER);
 	parameter integer BUFFLEN=5;
-	parameter integer CLOCK=650;
+	parameter integer CLOCK=650;//389;//433;//650;
 	input RESET;
 	input CLK;
 	input START;
 	output reg END;
 	output SIGNAL;
-	input [8*BUFFLEN-1:0] BUFFER;
+	input [0:8*BUFFLEN-1] BUFFER;
 	
 	reg [9:0] slckcount;
 	wire slckp;
 	wire [9:0] next_slckcount;
 	
 	assign slckp = slckcount == CLOCK;
-	assign next_slckcount = slckp ? 0 : slckcount + 10'd1;
+	assign next_slckcount = slckp ? 10'd0 : slckcount + 10'd1;
 	
 	reg [3:0] bitwidecount;
 	wire bitwide;
@@ -102,8 +104,7 @@ module Serial(RESET, CLK, START, END, SIGNAL, BUFFER);
 
 	assign bitwide = bitwidecount == 15;
 	assign next_bitwidecount =
-		bitwide ? 4'd0 :
-		slckp ? bitwidecount + 4'd1 :
+		slckp ? ( bitwide ? 4'd0 : bitwidecount + 4'd1 ) :
 		bitwidecount;
 	
 	reg [3:0] framecount;
@@ -111,73 +112,81 @@ module Serial(RESET, CLK, START, END, SIGNAL, BUFFER);
 	wire [3:0] next_framecount;
 
 	assign next_framecount =
-		framelast ? 0 :
-		bitwide ? framecount + 1 :
+		slckp && bitwide ? (framelast ? 4'd0 : framecount + 4'd1 ):
 		framecount;
 	assign framelast = framecount == 4'd10;
+	assign framefirst = framecount == 4'd0;
+	assign framestart = framecount == 4'd1;
 	
 	reg [7:0] charcount;
 	wire [7:0] next_charcount;
 	
 	assign next_charcount =
-		END ? 0 :
-		framelast ? charcount + 1 :
+		(slckp && bitwide && framelast) ? (END ? 8'd0 : charcount + 8'd1) :
 		charcount;
 	
 	assign SIGNAL =
-		!sending || END || framecount == 0 || framecount == 10 ? 1'b0 :
-		framecount == 1 ? 1'b1 :
-		BUFFER[8*charcount+framecount-2];
+		((!sending) || END || framefirst || framelast) ? 1'b1 : //stopbit
+		framestart ? 1'b0 : //startbit
+		charcount == 0 ? 1'b1 :
+		BUFFER[8*(charcount-1)+9-framecount];
 	
 	reg sending;
-	
 	always @(posedge CLK) begin
 		if (RESET) begin
-			sending = 0;
-			slckcount = 0;
-			bitwidecount = 0;
-			framecount = 0;
-			charcount = 0;
-			END = 0;
+			sending <= 0;
+			slckcount <= 0;
+			bitwidecount <= 0;
+			framecount <= 0;
+			charcount <= 0;
+			END <= 0;
 		end
 		if (END && !START) begin
-			END = 0;
-			sending = 0;
+			END <= 0;
+			sending <= 0;
 		end else if (!END && START && !sending) begin
-			sending = 1;
-			slckcount = 0;
-			bitwidecount = 0;
-			framecount = 0;
-			charcount = 0;
+			sending <= 1;
+			slckcount <= 0;
+			bitwidecount <= 0;
+			framecount <= 0;
+			charcount <= 0;
 		end else if (sending) begin
-			slckcount = next_slckcount;
-			bitwidecount = next_bitwidecount;
-			framecount = next_framecount;
-			charcount = next_charcount;
-			END = next_charcount == BUFFLEN;
-			sending = next_charcount != BUFFLEN;
+			slckcount <= next_slckcount;
+			bitwidecount <= next_bitwidecount;
+			framecount <= next_framecount;
+			charcount <= next_charcount;
+			END <= next_charcount ==  (BUFFLEN+1);
+			sending <= next_charcount != (BUFFLEN+1);
 		end
 	end
 endmodule
 
-module System(RESET, CLK, TXD);
-	parameter integer ENQLEN=3;
-	parameter integer PASSLEN=1;
-	parameter [0:8*ENQLEN-1] ENCRYPTED = 24'h44444;
+module System(RESET, CLK, FLAG, FOUND, TXD);
+	parameter integer ENQLEN=24;
+	parameter integer PASSLEN=10;
+	parameter [0:8*ENQLEN-1] ENCRYPTED = 192'd1921586676261470615353473544496359577763649460452205793039;
 	input RESET;
 	input CLK;
+	output FLAG;
+	output FOUND;
 	output TXD;
-	wire FOUND;
 	wire [0:8*PASSLEN-1] PASSWD_OUT;
 	wire SerEnd;
 	
 	wire DecoderCLK;
 	assign DecoderCLK = FOUND  && !SerEND ? 1'b0 : CLK;
 	
+	reg [24:0] DecoderCount;
+	
+	assign FLAG=DecoderCount[24];
+	
 	Decoder #(ENQLEN, PASSLEN, ENCRYPTED) dec(RESET, DecoderCLK, FOUND, PASSWD_OUT);
 	Serial #(PASSLEN) ser(RESET, CLK, FOUND, SerEND, TXD, PASSWD_OUT);
 	
 	always @(posedge CLK) begin
-		
+		if (RESET)
+			DecoderCount <= 25'd0;
+		else
+			DecoderCount <= DecoderCount+25'd1;
 	end
 endmodule

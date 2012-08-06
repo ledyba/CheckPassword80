@@ -29,8 +29,9 @@ module test;
 	reg RESET;
 
 	// Outputs
+	wire FLAG;
+	wire FOUND;
 	wire TXD;
-
 
 	integer count;
 	
@@ -38,6 +39,8 @@ module test;
 	System uut (
 		.RESET(RESET), 
 		.CLK(CLK), 
+		.FLAG(FLAG),
+		.FOUND(FOUND),
 		.TXD(TXD)
 	);
 
@@ -51,7 +54,7 @@ module test;
 		RESET=0;
 		CLK = 0;
 		// Add stimulus here
-		for (count = 0; count < 200000; count = count + 1) begin
+		for (count = 0; count < 200000000; count = count + 1) begin
 			#1;
 			CLK=1;
 			#1;

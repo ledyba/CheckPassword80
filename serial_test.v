@@ -68,7 +68,7 @@ module serial_test;
 		START=1;
 		#1;
 		CLK=0;
-		for (count = 0; count < 3000; count = count + 1) begin
+		for (count = 0; count < 3000000; count = count + 1) begin
 			#1;
 			CLK=1;
 			#1;
