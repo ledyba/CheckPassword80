@@ -1,7 +1,7 @@
 #! python3
 # -*- coding: utf-8 -*-
 
-from base import TABLE, TABLE_LEN, decodeAt, encodeAt
+from base import TABLE, TABLE_LEN, decodeAt, encodeAt, toFPGA
 
 def encode(ans,pass_):
 	key = ans+pass_
@@ -15,5 +15,10 @@ def encode(ans,pass_):
 		buffer_ += TABLE[encodeAt(i, j, TABLE.find(pass_[j]), TABLE.find(key[i]))];
 	return buffer_;
 
-print( encode("akari.html","daisuki") );
+URL="usushio.html"
+KEY="akari"
+encoded = encode(URL, KEY);
+print( repr(encoded) );
+print( toFPGA(encode(URL, KEY)) );
+print( "len: {0} / {1}".format(len(URL), len(KEY)) )
 

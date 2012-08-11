@@ -4,7 +4,7 @@
 #define DEC_LENGTH ENC_LENGTH
 FILE* LogFile;
 char Decrypted[MAX_SEARCH_LENGTH];
-const char* Encrypted = "Sok[%~sbN\\LhddxVH\'bNM)ZZX~w6$}#0)!{&y)0},2%S_]Q]T[Lf\\OZbF";
+const char* Encrypted = "ciY`JWeqUV[bEXC`_";
 char ENC_LENGTH;
 const char* KEY_CHAR = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 char KEY_LENGTH;
@@ -89,10 +89,10 @@ char key_dec(char length,char start,char end){
 	return ret;
 }
 void log_key(const char* key,const char* path){
-	LogFile = fopen("dec.txt","a");
-	fprintf(LogFile,"%s:%s\n",key,path);
+//	LogFile = fopen("dec.txt","a");
+//	fprintf(LogFile,"%s:%s\n",key,path);
 	printf("%s:%s\n",key,path);
-	fclose(LogFile);
+//	fclose(LogFile);
 }
 void decrypt(char length){
 	char max = DEC_LENGTH;
@@ -124,14 +124,14 @@ void loop(char depth,char max_depth){
 	}
 }
 void log_depth(char depth){
-	LogFile = fopen("dec.txt","a");
-	fprintf(LogFile,"Now Searching... Length:%d\n",depth);
+//	LogFile = fopen("dec.txt","a");
+//	fprintf(LogFile,"Now Searching... Length:%d\n",depth);
 	printf("Now Searching... Length:%d\n",depth);
-	fclose(LogFile);
+//	fclose(LogFile);
 }
 void search(){
-	char i=1;
-	char length = ENC_LENGTH;
+	char i=5;
+	char length = 6;//ENC_LENGTH;
 	for(;i<length;i++){
 		log_depth(i);
 		loop(0,i);

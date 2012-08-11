@@ -26,15 +26,10 @@ def decode(pass_,key):
 	passlen = len(pass_)
 	enqlen = len(key)
 	buffer_="";
-	for i in range(0, passlen):
+	for i in range(0, enqlen):
 		k=0
-		j = passlen-((enqlen-passlen+i)%passlen)-1;
-		buffer_ += TABLE[decodeAt(i, j, TABLE.find(pass_[j]), TABLE.find(key[(enqlen-passlen)+i]))];
+		j = passlen-(i%passlen)-1;
+		buffer_ += TABLE[decodeAt(i, j, TABLE.find(pass_[j]), TABLE.find(key[i]))];
 	return buffer_;
 
-print( decode("1q2w3e4r5t","n~m.b\'mx%?f2g\'{)-,&v20//") );
-print( decode("KR%%RKT$$T","n~m.b\'mx%?f2g\'{)-,&v20//") );
-print( calc("n~m.b\'mx%?f2g\'{)-,&v20//", len("1q2w3e4r5t")) );
-print(toFPGA("n~m.b\'mx%?f2g\'{)-,&v20//"))
-print(toFPGA("1q2w3e4r5t"))
 
