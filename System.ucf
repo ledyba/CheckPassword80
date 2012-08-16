@@ -21,3 +21,8 @@ NET "FLAG" LOC = P4;
 
 NET "FOUND" LOC = L6;
 NET "TXD" LOC = T7;
+
+# PlanAhead Generated IO constraints 
+
+NET "FLAG" SLEW = SLOW;
+NET "TXD" SLEW = FAST;

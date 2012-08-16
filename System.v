@@ -1,9 +1,10 @@
 `timescale 1ns / 1ps
 
-module Counter(RESET, CLK, END, OUT);
+module Counter(RESET, CLK, COUNTUP, END, OUT);
 	parameter integer len = 3;
 	input RESET;
 	input CLK;
+	input COUNTUP;
 	output END;
 	output [len*8-1:0] OUT;
 	reg [len*8-1:0] cnt;
@@ -12,7 +13,7 @@ module Counter(RESET, CLK, END, OUT);
 	
 	wire [len*8-1:0] added;
 	wire [len:0] carry;
-	assign carry [0] = 1'b1;
+	assign carry [0] = COUNTUP;
 	assign END = carry[len];
 	generate
 		genvar i;
@@ -65,7 +66,7 @@ module Decoder(RESET, CLK, FOUND, END, PASSWD_OUT);
     output [0:8*PASSLEN-1] PASSWD_OUT;
 	
 	wire [0:8*PASSLEN-1] passwd;
-	Counter #(PASSLEN) counter(RESET, CLK, END, passwd);
+	Counter #(PASSLEN) counter(RESET, CLK, !FOUND, END, passwd);
 	
 	wire [0:8*PASSLEN-1] decoded;
 
@@ -186,7 +187,7 @@ module System(RESET, CLK, FLAG, FOUND, TXD);
 	
 	assign FLAG=DecoderEND ? 1'b1 : DecoderCount[24];
 	
-	Decoder #(ENQLEN, PASSLEN, ENCRYPTED) dec(RESET, DecoderCLK, FOUND, DecoderEND, PASSWD_OUT);
+	Decoder #(ENQLEN, PASSLEN, ENCRYPTED) dec(RESET, CLK, FOUND, DecoderEND, PASSWD_OUT);
 	Serial #(PASSLEN) ser(RESET, CLK, SerSEND, SerEND, TXD, PASSWD_OUT);
 	
 	always @(posedge CLK) begin
